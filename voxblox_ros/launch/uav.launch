@@ -1,0 +1,35 @@
+<launch>
+
+  <arg name="uav_name" default="$(optenv UAV_NAME uav)"/>
+
+  <group ns="$(arg uav_name)">
+
+    <node name="voxblox_node" pkg="voxblox_ros" type="tsdf_server" output="screen" args="-alsologtostderr" clear_params="true">
+      <remap from="pointcloud" to="pcl_filter/points_processed"/>
+      <remap from="freespace_pointcloud" to="freespace_pc/points_freespace"/>
+
+      <param name="tsdf_voxel_size" value="0.25" />
+      <param name="truncation_distance" value="1.5" />
+      <param name="color_mode" value="normals" />
+      <param name="enable_icp" value="false" />
+      <param name="icp_refine_roll_pitch" value="true" />
+      <param name="update_mesh_every_n_sec" value="1.0" />
+      <param name="mesh_min_weight" value="2" />
+      <param name="method" value="merged" />
+      <param name="allow_clear" value="true" />
+      <param name="max_ray_length_m" value="20.0" />
+      <param name="use_const_weight" value="true" />
+      <param name="world_frame" value="$(arg uav_name)/rtk_origin"/>
+      <param name="verbose" value="true" />
+      <param name="mesh_filename" value="$(find voxblox_ros)/mesh_results/$(anon basement).ply" />
+
+      <param name="publish_tsdf_map" value="true" />
+      <param name="publish_esdf_map" value="true" />
+      <param name="publish_tsdf_info" value="true" />
+      <param name="publish_pointclouds" value="true" />
+      <param name="use_freespace_pointcloud" value="true" />
+    </node>
+
+  </group>
+
+</launch>
