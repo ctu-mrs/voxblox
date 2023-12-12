@@ -11,7 +11,7 @@
     <node name="voxblox_node" pkg="voxblox_ros" type="tsdf_server" output="screen" args="-alsologtostderr" clear_params="true" launch-prefix="$(arg launch_prefix)" >
       <param name="method" value="simple" />
 
-      <remap from="pointcloud" to="os_cloud_nodelet_deskewed/points_deskewed"/>
+      <remap from="pointcloud" to="vofod/background_clusters_pc"/>
       <remap from="freespace_pointcloud" to="freespace_pc/points_freespace"/>
       <param name="world_frame" value="$(arg uav_name)/rtk_origin"/>
 
