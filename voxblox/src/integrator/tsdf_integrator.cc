@@ -232,9 +232,14 @@ float TsdfIntegratorBase::getVoxelWeight(const Point& point_C) const {
   if (config_.use_const_weight) {
     return 1.0f;
   }
-  const FloatingPoint dist_z = std::abs(point_C.z());
-  if (dist_z > kEpsilon) {
-    return 1.0f / (dist_z * dist_z);
+  /* const FloatingPoint dist_z = std::abs(point_C.z()); */
+  /* if (dist_z > kEpsilon) { */
+  /*   return 1.0f / (dist_z * dist_z); */
+  /* } */
+
+  const FloatingPoint dist = point_C.norm();
+  if (dist > kEpsilon) {
+    return 1.0f / (dist * dist);
   }
   return 0.0f;
 }

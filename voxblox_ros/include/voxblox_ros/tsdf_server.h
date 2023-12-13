@@ -47,6 +47,8 @@ class TsdfServer {
 
   void getServerConfigFromRosParam(const ros::NodeHandle& nh_private);
 
+  void pointcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in);
+  void rangecloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in);
   void insertPointcloud(const sensor_msgs::PointCloud2::Ptr& pointcloud);
 
   void insertFreespacePointcloud(
@@ -133,6 +135,7 @@ class TsdfServer {
 
   /// Data subscribers.
   ros::Subscriber pointcloud_sub_;
+  ros::Subscriber rangecloud_sub_;
   ros::Subscriber freespace_pointcloud_sub_;
 
   /// Publish markers for visualization.

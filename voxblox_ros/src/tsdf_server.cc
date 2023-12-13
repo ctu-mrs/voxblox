@@ -57,7 +57,9 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
   nh_private_.param("pointcloud_queue_size", pointcloud_queue_size_,
                     pointcloud_queue_size_);
   pointcloud_sub_ = nh_.subscribe("pointcloud", pointcloud_queue_size_,
-                                  &TsdfServer::insertPointcloud, this);
+                                  &TsdfServer::pointcloudCallback, this);
+  rangecloud_sub_ = nh_.subscribe("rangecloud", pointcloud_queue_size_,
+                                  &TsdfServer::rangecloudCallback, this);
 
   mesh_pub_ = nh_private_.advertise<voxblox_msgs::Mesh>("mesh", 1, true);
 
@@ -350,8 +352,20 @@ bool TsdfServer::getNextPointcloudFromQueue(
   return false;
 }
 
-void TsdfServer::insertPointcloud(
-    const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in) {
+void TsdfServer::pointcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in)
+{
+  ROS_INFO_STREAM("Inserting a new pointcloud with " << pointcloud_msg_in->width * pointcloud_msg_in->height << " points.");
+  insertPointcloud(pointcloud_msg_in);
+}
+
+void TsdfServer::rangecloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in)
+{
+  ROS_INFO_STREAM("Inserting a new range measurement.");
+  insertPointcloud(pointcloud_msg_in);
+}
+
+void TsdfServer::insertPointcloud(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in)
+{
   if (pointcloud_msg_in->header.stamp - last_msg_time_ptcloud_ >
       min_time_between_msgs_) {
     last_msg_time_ptcloud_ = pointcloud_msg_in->header.stamp;
