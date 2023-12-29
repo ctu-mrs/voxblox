@@ -112,6 +112,12 @@ inline Color convertColor(const pcl::PointXYZRGB& point,
 }
 
 template <>
+inline Color convertColor(const pcl::PointXYZRGBNormal& point,
+                          const std::shared_ptr<ColorMap>& /*color_map*/) {
+  return Color(point.r, point.g, point.b, point.a);
+}
+
+template <>
 inline Color convertColor(const pcl::PointXYZI& point,
                           const std::shared_ptr<ColorMap>& color_map) {
   return color_map->colorLookup(point.intensity);
@@ -122,15 +128,51 @@ inline Color convertColor(const pcl::PointXYZ& /*point*/,
                           const std::shared_ptr<ColorMap>& color_map) {
   return color_map->colorLookup(0);
 }
+////////////////
+
+template <typename PCLPoint>
+Flag convertFlag(const PCLPoint& point);
+
+template <>
+inline Flag convertFlag(const pcl::PointXYZRGB& point) {
+  return Flag(false, false);
+}
+
+template <>
+inline Flag convertFlag(const pcl::PointXYZRGBNormal& point) {
+  bool is_lidar;
+  if(point.curvature>0){
+    is_lidar = true;
+  }else{
+    is_lidar = false;
+  }
+  return Flag(true, is_lidar);
+}
+
+template <>
+inline Flag convertFlag(const pcl::PointXYZI& point) {
+  return Flag(false, false);
+}
+
+template <>
+inline Flag convertFlag(const pcl::PointXYZ& /*point*/) {
+  return Flag(false, false);
+}
+
+////////////////
 
 /// Convert pointclouds of different PCL types to a voxblox pointcloud.
 template <typename PCLPoint>
 inline void convertPointcloud(
     const typename pcl::PointCloud<PCLPoint>& pointcloud_pcl,
     const std::shared_ptr<ColorMap>& color_map, Pointcloud* points_C,
-    Colors* colors) {
+    Colors* colors,
+    Flags* points_flags
+    ) {
   points_C->reserve(pointcloud_pcl.size());
   colors->reserve(pointcloud_pcl.size());
+  points_flags->reserve(pointcloud_pcl.size());
+
   for (size_t i = 0; i < pointcloud_pcl.points.size(); ++i) {
     if (!isPointFinite(pointcloud_pcl.points[i])) {
       continue;
@@ -140,6 +182,7 @@ inline void convertPointcloud(
                               pointcloud_pcl.points[i].z));
     colors->emplace_back(
         convertColor<PCLPoint>(pointcloud_pcl.points[i], color_map));
+    points_flags->emplace_back(convertFlag(pointcloud_pcl.points[i]));
   }
 }
 

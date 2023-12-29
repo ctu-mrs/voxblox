@@ -62,10 +62,12 @@ typedef AlignedVector<LongIndex> LongIndexVector;
 typedef LongIndexVector GlobalIndexVector;
 
 struct Color;
+struct Flag;
 
 // Pointcloud types for external interface.
 typedef AlignedVector<Point> Pointcloud;
 typedef AlignedVector<Color> Colors;
+typedef AlignedVector<Flag> Flags;
 
 // For triangle meshing/vertex access.
 typedef size_t VertexIndex;
@@ -90,6 +92,13 @@ typedef Eigen::Matrix<FloatingPoint, 8, 8> InterpTable;
 typedef Eigen::Matrix<FloatingPoint, 1, 8> InterpVector;
 // Type must allow negatives:
 typedef Eigen::Array<IndexElement, 3, 8> InterpIndexes;
+
+struct Flag{
+  Flag():  is_valid(false),is_lidar(true) {}
+  Flag(bool _is_valid, bool _is_lidar) : is_valid(_is_valid), is_lidar(_is_lidar){}
+  bool is_lidar;
+  bool is_valid;
+};
 
 struct Color {
   Color() : r(0), g(0), b(0), a(0) {}

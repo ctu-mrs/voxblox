@@ -229,6 +229,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
 
   Pointcloud points_C;
   Colors colors;
+  Flags points_flags;
   timing::Timer ptcloud_timer("ptcloud_preprocess");
 
   // Convert differently depending on RGB or I type.
@@ -236,17 +237,17 @@ void TsdfServer::processPointCloudMessageAndInsert(
     pcl::PointCloud<pcl::PointXYZRGB> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
   } else if (has_intensity) {
     pcl::PointCloud<pcl::PointXYZI> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
   } else {
     pcl::PointCloud<pcl::PointXYZ> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
   }
   ptcloud_timer.Stop();
 
@@ -337,11 +338,9 @@ bool TsdfServer::getNextPointcloudFromQueue(
     queue->pop();
     return true;
   } else {
+      ROS_ERROR_THROTTLE(1,"Cant transform from %s to %s !",(*pointcloud_msg)->header.frame_id.c_str(), world_frame_.c_str());
     if (queue->size() >= kMaxQueueSize) {
-      ROS_ERROR_THROTTLE(60,
-                         "Input pointcloud queue getting too long! Dropping "
-                         "some pointclouds. Either unable to look up transform "
-                         "timestamps or the processing is taking too long.");
+      ROS_ERROR_THROTTLE(1,"Input pointcloud queue getting too long! Dropping some pointclouds. Queue size: %d", int(queue->size()));
       while (queue->size() >= kMaxQueueSize) {
         queue->pop();
       }
