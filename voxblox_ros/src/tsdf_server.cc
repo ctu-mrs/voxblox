@@ -28,7 +28,6 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
       max_block_distance_from_body_(std::numeric_limits<FloatingPoint>::max()),
       slice_level_(0.5),
       use_freespace_pointcloud_(false),
-      color_map_(new RainbowColorMap()),
       publish_pointclouds_on_update_(false),
       publish_slices_(false),
       publish_pointclouds_(false),
@@ -183,33 +182,6 @@ void TsdfServer::getServerConfigFromRosParam(
 
   // Mesh settings.
   nh_private.param("mesh_filename", mesh_filename_, mesh_filename_);
-  std::string color_mode("");
-  nh_private.param("color_mode", color_mode, color_mode);
-  color_mode_ = getColorModeFromString(color_mode);
-
-  // Color map for intensity pointclouds.
-  std::string intensity_colormap("rainbow");
-  float intensity_max_value = kDefaultMaxIntensity;
-  nh_private.param("intensity_colormap", intensity_colormap,
-                   intensity_colormap);
-  nh_private.param("intensity_max_value", intensity_max_value,
-                   intensity_max_value);
-
-  // Default set in constructor.
-  if (intensity_colormap == "rainbow") {
-    color_map_.reset(new RainbowColorMap());
-  } else if (intensity_colormap == "inverse_rainbow") {
-    color_map_.reset(new InverseRainbowColorMap());
-  } else if (intensity_colormap == "grayscale") {
-    color_map_.reset(new GrayscaleColorMap());
-  } else if (intensity_colormap == "inverse_grayscale") {
-    color_map_.reset(new InverseGrayscaleColorMap());
-  } else if (intensity_colormap == "ironbow") {
-    color_map_.reset(new IronbowColorMap());
-  } else {
-    ROS_ERROR_STREAM("Invalid color map: " << intensity_colormap);
-  }
-  color_map_->setMaxValue(intensity_max_value);
 }
 
 void TsdfServer::processPointCloudMessageAndInsert(
@@ -218,39 +190,35 @@ void TsdfServer::processPointCloudMessageAndInsert(
   // Convert the PCL pointcloud into our awesome format.
 
   // Horrible hack fix to fix color parsing colors in PCL.
-  bool color_pointcloud = false;
   bool has_intensity = false;
   for (size_t d = 0; d < pointcloud_msg->fields.size(); ++d) {
-    if (pointcloud_msg->fields[d].name == std::string("rgb")) {
-      pointcloud_msg->fields[d].datatype = sensor_msgs::PointField::FLOAT32;
-      color_pointcloud = true;
-    } else if (pointcloud_msg->fields[d].name == std::string("intensity")) {
+    if (pointcloud_msg->fields[d].name == std::string("intensity")) {
       has_intensity = true;
     }
   }
 
-  Pointcloud points_C;
-  Colors colors;
+  PointcloudWeighted points_Cw;
   timing::Timer ptcloud_timer("ptcloud_preprocess");
 
-  // Convert differently depending on RGB or I type.
-  if (color_pointcloud) {
-    pcl::PointCloud<pcl::PointXYZRGB> pointcloud_pcl;
-    // pointcloud_pcl is modified below:
-    pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
-  } else if (has_intensity) {
+  // Convert differently depending on point type.
+  if (has_intensity) {
     pcl::PointCloud<pcl::PointXYZI> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
-  } else {
+    convertPointcloud(pointcloud_pcl, &points_Cw);
+  }
+  else {
     pcl::PointCloud<pcl::PointXYZ> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors);
+    convertPointcloud(pointcloud_pcl, &points_Cw);
   }
   ptcloud_timer.Stop();
+
+  Pointcloud points_C;
+  points_C.reserve(points_Cw.size());
+  for (const auto& ptw : points_Cw)
+    points_C.push_back(ptw.head<3>());
 
   Transformation T_G_C_refined = T_G_C;
   if (enable_icp_) {
@@ -301,11 +269,11 @@ void TsdfServer::processPointCloudMessageAndInsert(
   }
 
   if (verbose_) {
-    ROS_INFO("Integrating a pointcloud with %lu points.", points_C.size());
+    ROS_INFO("Integrating a pointcloud with %lu points.", points_Cw.size());
   }
 
   ros::WallTime start = ros::WallTime::now();
-  integratePointcloud(T_G_C_refined, points_C, colors, is_freespace_pointcloud);
+  integratePointcloud(T_G_C_refined, points_Cw, is_freespace_pointcloud);
   ros::WallTime end = ros::WallTime::now();
   if (verbose_) {
     ROS_INFO("Finished integrating in %f seconds, have %lu blocks.",
@@ -419,11 +387,9 @@ void TsdfServer::insertFreespacePointcloud(
 }
 
 void TsdfServer::integratePointcloud(const Transformation& T_G_C,
-                                     const Pointcloud& ptcloud_C,
-                                     const Colors& colors,
+                                     const PointcloudWeighted& ptcloud_C,
                                      const bool is_freespace_pointcloud) {
-  CHECK_EQ(ptcloud_C.size(), colors.size());
-  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors,
+  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C,
                                         is_freespace_pointcloud);
 }
 

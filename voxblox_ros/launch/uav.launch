@@ -17,7 +17,7 @@
       <param name="pointcloud_queue_size" value="20"/>
       <param name="world_frame" value="$(arg uav_name)/rtk_origin"/>
 
-      <param name="use_freespace_pointcloud" value="true" />
+      <param name="use_freespace_pointcloud" value="false" />
       <param name="min_ray_length_m" value="1.2" />
       <param name="max_ray_length_m" value="25.0" />
       <param name="allow_clear" value="true" />

@@ -76,7 +76,7 @@ class MixedThreadSafeIndex : public ThreadSafeIndex {
  */
 class SortedThreadSafeIndex : public ThreadSafeIndex {
  public:
-  explicit SortedThreadSafeIndex(const Pointcloud& points_C);
+  explicit SortedThreadSafeIndex(const PointcloudWeighted& points_C);
 
  protected:
   virtual size_t getNextIndexImpl(size_t sequential_idx);
@@ -88,7 +88,7 @@ class SortedThreadSafeIndex : public ThreadSafeIndex {
 class ThreadSafeIndexFactory {
  public:
   static ThreadSafeIndex* get(const std::string& mode,
-                              const Pointcloud& points_C);
+                              const PointcloudWeighted& points_C);
 };
 
 /**

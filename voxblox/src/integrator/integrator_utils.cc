@@ -3,7 +3,7 @@
 namespace voxblox {
 
 ThreadSafeIndex* ThreadSafeIndexFactory::get(const std::string& mode,
-                                             const Pointcloud& points_C) {
+                                             const PointcloudWeighted& points_C) {
   if (mode == "mixed") {
     return new MixedThreadSafeIndex(points_C.size());
   } else if (mode == "sorted") {
@@ -21,12 +21,12 @@ MixedThreadSafeIndex::MixedThreadSafeIndex(size_t number_of_points)
     : ThreadSafeIndex(number_of_points),
       number_of_groups_(number_of_points / step_size_) {}
 
-SortedThreadSafeIndex::SortedThreadSafeIndex(const Pointcloud& points_C)
+SortedThreadSafeIndex::SortedThreadSafeIndex(const PointcloudWeighted& points_C)
     : ThreadSafeIndex(points_C.size()) {
   indices_and_squared_norms_.reserve(points_C.size());
   size_t idx = 0;
-  for (const Point& point_C : points_C) {
-    indices_and_squared_norms_.emplace_back(idx, point_C.squaredNorm());
+  for (const PointWeighted& point_Cw : points_C) {
+    indices_and_squared_norms_.emplace_back(idx, point_Cw.head<3>().squaredNorm());
     ++idx;
   }
 

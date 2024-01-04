@@ -39,10 +39,12 @@ inline std::shared_ptr<Type> aligned_shared(Arguments&&... arguments) {
 
 // Types.
 typedef float FloatingPoint;
+typedef FloatingPoint Weight;
 typedef int IndexElement;
 typedef int64_t LongIndexElement;
 
 typedef Eigen::Matrix<FloatingPoint, 3, 1> Point;
+typedef Eigen::Matrix<FloatingPoint, 4, 1> PointWeighted;
 typedef Eigen::Matrix<FloatingPoint, 3, 1> Ray;
 
 typedef Eigen::Matrix<IndexElement, 3, 1> AnyIndex;
@@ -65,6 +67,7 @@ struct Color;
 
 // Pointcloud types for external interface.
 typedef AlignedVector<Point> Pointcloud;
+typedef AlignedVector<PointWeighted> PointcloudWeighted;
 typedef AlignedVector<Color> Colors;
 
 // For triangle meshing/vertex access.

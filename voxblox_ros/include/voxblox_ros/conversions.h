@@ -123,23 +123,34 @@ inline Color convertColor(const pcl::PointXYZ& /*point*/,
   return color_map->colorLookup(0);
 }
 
+template <typename PCLPoint>
+Weight convertWeight(const PCLPoint& point);
+
+template <>
+inline Weight convertWeight(const pcl::PointXYZI& point) {
+  return point.intensity;
+}
+
+template <>
+inline Weight convertWeight(const pcl::PointXYZ& /*point*/) {
+  return 1;
+}
+
 /// Convert pointclouds of different PCL types to a voxblox pointcloud.
 template <typename PCLPoint>
 inline void convertPointcloud(
     const typename pcl::PointCloud<PCLPoint>& pointcloud_pcl,
-    const std::shared_ptr<ColorMap>& color_map, Pointcloud* points_C,
-    Colors* colors) {
-  points_C->reserve(pointcloud_pcl.size());
-  colors->reserve(pointcloud_pcl.size());
+    PointcloudWeighted* points_Cw) {
+  points_Cw->reserve(pointcloud_pcl.size());
   for (size_t i = 0; i < pointcloud_pcl.points.size(); ++i) {
     if (!isPointFinite(pointcloud_pcl.points[i])) {
       continue;
     }
-    points_C->push_back(Point(pointcloud_pcl.points[i].x,
+    const auto w = convertWeight<PCLPoint>(pointcloud_pcl.points[i]);
+    points_Cw->push_back(PointWeighted(pointcloud_pcl.points[i].x,
                               pointcloud_pcl.points[i].y,
-                              pointcloud_pcl.points[i].z));
-    colors->emplace_back(
-        convertColor<PCLPoint>(pointcloud_pcl.points[i], color_map));
+                              pointcloud_pcl.points[i].z,
+                              w));
   }
 }
 

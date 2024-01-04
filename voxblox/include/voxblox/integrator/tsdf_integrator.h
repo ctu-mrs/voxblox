@@ -42,7 +42,7 @@ const std::array<std::string, kNumTsdfIntegratorTypes>
 
 /**
  * Base class to the simple, merged and fast TSDF integrators. The integrator
- * takes in a pointcloud + pose and uses this information to update the TSDF
+ * takes in a PointcloudWeighted + pose and uses this information to update the TSDF
  * information in the given TSDF layer. Note most functions in this class state
  * if they are thread safe. Unless explicitly stated otherwise, this thread
  * safety is based on the assumption that any pointers passed to the functions
@@ -98,8 +98,7 @@ class TsdfIntegratorBase {
    * rather then exact distance. This is useful for clearing out free space.
    */
   virtual void integratePointCloud(const Transformation& T_G_C,
-                                   const Pointcloud& points_C,
-                                   const Colors& colors,
+                                   const PointcloudWeighted& points_C,
                                    const bool freespace_points = false) = 0;
 
   /// Returns a CONST ref of the config.
@@ -152,7 +151,7 @@ class TsdfIntegratorBase {
   /// Updates tsdf_voxel, Thread safe.
   void updateTsdfVoxel(const Point& origin, const Point& point_G,
                        const GlobalIndex& global_voxel_index,
-                       const Color& color, const float weight,
+                       const float weight,
                        TsdfVoxel* tsdf_voxel);
 
   /// Calculates TSDF distance, Thread safe.
@@ -160,7 +159,7 @@ class TsdfIntegratorBase {
                         const Point& voxel_center) const;
 
   /// Thread safe.
-  float getVoxelWeight(const Point& point_C) const;
+  float getVoxelWeight(const PointWeighted& point_Cw) const;
 
   Config config_;
 
@@ -179,7 +178,7 @@ class TsdfIntegratorBase {
   std::mutex temp_block_mutex_;
   /**
    * Temporary block storage, used to hold blocks that need to be created while
-   * integrating a new pointcloud
+   * integrating a new PointcloudWeighted
    */
   Layer<TsdfVoxel>::BlockHashMap temp_block_map_;
 
@@ -220,11 +219,11 @@ class SimpleTsdfIntegrator : public TsdfIntegratorBase {
       : TsdfIntegratorBase(config, layer) {}
 
   void integratePointCloud(const Transformation& T_G_C,
-                           const Pointcloud& points_C, const Colors& colors,
+                           const PointcloudWeighted& points_C,
                            const bool freespace_points = false);
 
   void integrateFunction(const Transformation& T_G_C,
-                         const Pointcloud& points_C, const Colors& colors,
+                         const PointcloudWeighted& points_C,
                          const bool freespace_points,
                          ThreadSafeIndex* index_getter);
 };
@@ -242,38 +241,38 @@ class MergedTsdfIntegrator : public TsdfIntegratorBase {
       : TsdfIntegratorBase(config, layer) {}
 
   void integratePointCloud(const Transformation& T_G_C,
-                           const Pointcloud& points_C, const Colors& colors,
+                           const PointcloudWeighted& points_C,
                            const bool freespace_points = false);
 
  protected:
-  void bundleRays(const Transformation& T_G_C, const Pointcloud& points_C,
+  void bundleRays(const Transformation& T_G_C, const PointcloudWeighted& points_C,
                   const bool freespace_points, ThreadSafeIndex* index_getter,
                   LongIndexHashMapType<AlignedVector<size_t>>::type* voxel_map,
                   LongIndexHashMapType<AlignedVector<size_t>>::type* clear_map);
 
   void integrateVoxel(
-      const Transformation& T_G_C, const Pointcloud& points_C,
-      const Colors& colors, bool enable_anti_grazing, bool clearing_ray,
+      const Transformation& T_G_C, const PointcloudWeighted& points_C,
+      bool enable_anti_grazing, bool clearing_ray,
       const std::pair<GlobalIndex, AlignedVector<size_t>>& kv,
       const LongIndexHashMapType<AlignedVector<size_t>>::type& voxel_map);
 
   void integrateVoxels(
-      const Transformation& T_G_C, const Pointcloud& points_C,
-      const Colors& colors, bool enable_anti_grazing, bool clearing_ray,
+      const Transformation& T_G_C, const PointcloudWeighted& points_C,
+      bool enable_anti_grazing, bool clearing_ray,
       const LongIndexHashMapType<AlignedVector<size_t>>::type& voxel_map,
       const LongIndexHashMapType<AlignedVector<size_t>>::type& clear_map,
       size_t thread_idx);
 
   void integrateRays(
-      const Transformation& T_G_C, const Pointcloud& points_C,
-      const Colors& colors, bool enable_anti_grazing, bool clearing_ray,
+      const Transformation& T_G_C, const PointcloudWeighted& points_C,
+      bool enable_anti_grazing, bool clearing_ray,
       const LongIndexHashMapType<AlignedVector<size_t>>::type& voxel_map,
       const LongIndexHashMapType<AlignedVector<size_t>>::type& clear_map);
 };
 
 /**
  * An integrator that prioritizes speed over everything else. Rays are cast from
- * the pointcloud to the sensor origin. If a ray intersects
+ * the PointcloudWeighted to the sensor origin. If a ray intersects
  * max_consecutive_ray_collisions voxels in a row that have already been updated
  * by other rays from the same cloud, it is terminated early. This results in a
  * large reduction in the number of freespace updates and greatly improves
@@ -291,12 +290,12 @@ class FastTsdfIntegrator : public TsdfIntegratorBase {
       : TsdfIntegratorBase(config, layer) {}
 
   void integrateFunction(const Transformation& T_G_C,
-                         const Pointcloud& points_C, const Colors& colors,
+                         const PointcloudWeighted& points_C,
                          const bool freespace_points,
                          ThreadSafeIndex* index_getter);
 
   void integratePointCloud(const Transformation& T_G_C,
-                           const Pointcloud& points_C, const Colors& colors,
+                           const PointcloudWeighted& points_C,
                            const bool freespace_points = false);
 
  private:
