@@ -229,7 +229,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
 
   Pointcloud points_C;
   Colors colors;
-  Flags points_flags;
+  Infos points_info;
   timing::Timer ptcloud_timer("ptcloud_preprocess");
 
   // Convert differently depending on RGB or I type.
@@ -237,17 +237,17 @@ void TsdfServer::processPointCloudMessageAndInsert(
     pcl::PointCloud<pcl::PointXYZRGB> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_info);
   } else if (has_intensity) {
     pcl::PointCloud<pcl::PointXYZI> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_info);
   } else {
     pcl::PointCloud<pcl::PointXYZ> pointcloud_pcl;
     // pointcloud_pcl is modified below:
     pcl::fromROSMsg(*pointcloud_msg, pointcloud_pcl);
-    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_flags);
+    convertPointcloud(pointcloud_pcl, color_map_, &points_C, &colors, &points_info);
   }
   ptcloud_timer.Stop();
 
@@ -304,7 +304,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
   }
 
   ros::WallTime start = ros::WallTime::now();
-  integratePointcloud(T_G_C_refined, points_C, colors, is_freespace_pointcloud);
+  integratePointcloud(T_G_C_refined, points_C, colors,points_info, is_freespace_pointcloud);
   ros::WallTime end = ros::WallTime::now();
   if (verbose_) {
     ROS_INFO("Finished integrating in %f seconds, have %lu blocks.",
@@ -406,9 +406,10 @@ void TsdfServer::insertFreespacePointcloud(
 void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                      const Pointcloud& ptcloud_C,
                                      const Colors& colors,
+                                     const Infos& points_info,
                                      const bool is_freespace_pointcloud) {
   CHECK_EQ(ptcloud_C.size(), colors.size());
-  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors,
+  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors, points_info,
                                         is_freespace_pointcloud);
 }
 

@@ -200,6 +200,7 @@ bool SimulationServer::generatePlausibleViewpoint(FloatingPoint min_distance,
 void SimulationServer::generateSDF() {
   Pointcloud ptcloud;
   Colors colors;
+  Infos points_info;
 
   Point view_origin(0.0, 0.0, 2.0);
   Point view_direction(0.0, 1.0, 0.0);
@@ -233,7 +234,7 @@ void SimulationServer::generateSDF() {
     transformPointcloud(T_G_C.inverse(), ptcloud, &ptcloud_C);
 
     // Put into the real map.
-    tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors);
+    tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C, colors, points_info);
 
     if (generate_occupancy_) {
       occ_integrator_->integratePointCloud(T_G_C, ptcloud_C);
