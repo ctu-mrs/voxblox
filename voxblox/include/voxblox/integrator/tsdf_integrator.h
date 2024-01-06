@@ -153,7 +153,7 @@ class TsdfIntegratorBase {
   /// Updates tsdf_voxel, Thread safe.
   void updateTsdfVoxel(const Point& origin, const Point& point_G,
                        const GlobalIndex& global_voxel_index,
-                       const Color& color, const float weight,
+                       const Color& color, const Info& point_info, const float weight,
                        TsdfVoxel* tsdf_voxel);
 
   /// Calculates TSDF distance, Thread safe.

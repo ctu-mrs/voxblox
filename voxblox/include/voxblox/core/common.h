@@ -94,7 +94,7 @@ typedef Eigen::Matrix<FloatingPoint, 1, 8> InterpVector;
 typedef Eigen::Array<IndexElement, 3, 8> InterpIndexes;
 
 struct Info{
-  Info():  is_valid(false),is_lidar(true) {}
+  Info():  is_valid(true),is_lidar(true) {}
   Info(bool _is_valid, bool _is_lidar) : is_valid(_is_valid), is_lidar(_is_lidar){}
   bool is_valid;
   bool is_lidar;
@@ -110,6 +110,38 @@ struct Color {
   uint8_t g;
   uint8_t b;
   uint8_t a;
+
+  //new 
+  static Color blendTwoColors(const Color& first_color,
+                              FloatingPoint first_weight,
+                              const Color& second_color,
+                              FloatingPoint second_weight, 
+                              const Info& point_info) {
+    FloatingPoint total_weight = first_weight + second_weight;
+
+    first_weight /= total_weight;
+    second_weight /= total_weight;
+
+    Color new_color;
+    if(point_info.is_valid && !point_info.is_lidar){
+      //update the color
+      new_color.r = static_cast<uint8_t>(
+          round(first_color.r * first_weight + second_color.r * second_weight));
+      new_color.g = static_cast<uint8_t>(
+          round(first_color.g * first_weight + second_color.g * second_weight));
+      new_color.b = static_cast<uint8_t>(
+          round(first_color.b * first_weight + second_color.b * second_weight));
+      new_color.a = static_cast<uint8_t>(
+          round(first_color.a * first_weight + second_color.a * second_weight));
+    }else{
+      //keep the color as is
+      new_color.r = first_color.r;
+      new_color.g = first_color.g;
+      new_color.b = first_color.b;
+      new_color.a = first_color.a;
+    }
+    return new_color;
+  }
 
   static Color blendTwoColors(const Color& first_color,
                               FloatingPoint first_weight,

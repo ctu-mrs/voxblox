@@ -150,7 +150,7 @@ void TsdfIntegratorBase::updateLayerWithStoredBlocks() {
 void TsdfIntegratorBase::updateTsdfVoxel(const Point& origin,
                                          const Point& point_G,
                                          const GlobalIndex& global_voxel_idx,
-                                         const Color& color, const float weight,
+                                         const Color& color, const Info& point_info, const float weight,
                                          TsdfVoxel* tsdf_voxel) {
   DCHECK(tsdf_voxel != nullptr);
 
@@ -200,7 +200,7 @@ void TsdfIntegratorBase::updateTsdfVoxel(const Point& origin,
   // color blending is expensive only do it close to the surface
   if (std::abs(sdf) < config_.default_truncation_distance) {
     tsdf_voxel->color = Color::blendTwoColors(
-        tsdf_voxel->color, tsdf_voxel->weight, color, updated_weight);
+        tsdf_voxel->color, tsdf_voxel->weight, color, updated_weight, point_info);
   }
   tsdf_voxel->distance =
       (new_sdf > 0.0) ? std::min(config_.default_truncation_distance, new_sdf)
@@ -236,11 +236,11 @@ float TsdfIntegratorBase::getVoxelWeight(const Point& point_C, const Info& point
   if (dist > kEpsilon) {
     if(point_info.is_lidar){
       //picoflexx
-      return 1.0f / std::pow(dist, 1.0);
+      return 1.0f;// / std::pow(dist, 1.0);
     }
     else{
       //depth camera
-      return 1.0f / std::pow(dist, 2.0);
+      return 1.0f / std::pow(dist, 3.0);
     }
   }
   return 0.0f;
@@ -321,7 +321,7 @@ void SimpleTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
 
       const float weight = getVoxelWeight(point_C, point_info);
 
-      updateTsdfVoxel(origin, point_G, global_voxel_idx, color, weight, voxel);
+      updateTsdfVoxel(origin, point_G, global_voxel_idx, color,point_info, weight, voxel);
     }
   }
 }
@@ -404,6 +404,7 @@ void MergedTsdfIntegrator::integrateVoxel(
 
   const Point& origin = T_G_C.getPosition();
   Color merged_color;
+  Info point_info = Info(false, false);
   Point merged_point_C = Point::Zero();
   FloatingPoint merged_weight = 0.0;
 
@@ -449,8 +450,8 @@ void MergedTsdfIntegrator::integrateVoxel(
     BlockIndex block_idx;
     TsdfVoxel* voxel =
         allocateStorageAndGetVoxelPtr(global_voxel_idx, &block, &block_idx);
-
-    updateTsdfVoxel(origin, merged_point_G, global_voxel_idx, merged_color,
+    
+    updateTsdfVoxel(origin, merged_point_G, global_voxel_idx, merged_color,point_info,
                     merged_weight, voxel);
   }
 }
@@ -577,7 +578,7 @@ void FastTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
 
       const float weight = getVoxelWeight(point_C, point_info);
 
-      updateTsdfVoxel(origin, point_G, global_voxel_idx, color, weight, voxel);
+      updateTsdfVoxel(origin, point_G, global_voxel_idx, color,point_info, weight, voxel);
     }
   }
 }
