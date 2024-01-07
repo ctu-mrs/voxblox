@@ -236,11 +236,11 @@ float TsdfIntegratorBase::getVoxelWeight(const Point& point_C, const Info& point
   if (dist > kEpsilon) {
     if(point_info.is_lidar){
       //picoflexx
-      return 1.0f;// / std::pow(dist, 1.0);
+      return 1.0f / std::pow(dist, 1.0);
     }
     else{
       //depth camera
-      return 1.0f / std::pow(dist, 3.0);
+      return 1.0f / std::pow(dist, 2.0);
     }
   }
   return 0.0f;
