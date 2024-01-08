@@ -17,14 +17,14 @@
       <param name="pointcloud_queue_size" value="20"/>
       <param name="world_frame" value="$(arg uav_name)/rtk_origin"/>
 
-      <param name="use_freespace_pointcloud" value="false" />
+      <param name="use_freespace_pointcloud" value="true" />
       <param name="min_ray_length_m" value="1.2" />
       <param name="max_ray_length_m" value="25.0" />
       <param name="allow_clear" value="true" />
 
       <param name="tsdf_voxel_size" value="0.25" />
       <param name="tsdf_voxels_per_side" value="16" />
-      <param name="truncation_distance" value="2.0" />
+      <param name="truncation_distance" value="1.75" />
       <param name="max_weight" value="10000.0" />
       <param name="use_const_weight" value="false" />
       <param name="use_weight_dropoff" value="false" />
@@ -32,6 +32,7 @@
       <param name="enable_icp" value="true" />
       <param name="icp_refine_roll_pitch" value="false" />
 
+      <param name="min_time_between_msgs_sec" value="-666.0" />
       <param name="update_mesh_every_n_sec" value="1.0" />
       <param name="output_mesh_as_pointcloud" value="true" />
       <param name="output_mesh_as_pcl_mesh" value="true" />
