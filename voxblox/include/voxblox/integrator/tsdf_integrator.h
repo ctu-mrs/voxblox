@@ -66,6 +66,9 @@ class TsdfIntegratorBase {
     bool use_weight_dropoff = true;
     bool use_sparsity_compensation_factor = false;
     float sparsity_compensation_factor = 1.0f;
+    float voxel_weight_noise_picoflexx_factor = 1.0f;
+    float voxel_weight_noise_depth_camera_factor = 2.0f;
+    
 
     size_t integrator_threads = std::thread::hardware_concurrency();
 
@@ -100,8 +103,14 @@ class TsdfIntegratorBase {
   virtual void integratePointCloud(const Transformation& T_G_C,
                                    const Pointcloud& points_C,
                                    const Colors& colors,
+                                   const bool freespace_points = false) = 0;
+  
+  virtual void integratePointCloud(const Transformation& T_G_C,
+                                   const Pointcloud& points_C,
+                                   const Colors& colors,
                                    const Infos& points_info,
                                    const bool freespace_points = false) = 0;
+  
 
   /// Returns a CONST ref of the config.
   const Config& getConfig() const { return config_; }
@@ -224,6 +233,10 @@ class SimpleTsdfIntegrator : public TsdfIntegratorBase {
                            const Pointcloud& points_C, const Colors& colors, const Infos& points_info,
                            const bool freespace_points = false);
 
+  void integratePointCloud(const Transformation& T_G_C,
+                           const Pointcloud& points_C, const Colors& colors,
+                           const bool freespace_points = false);
+  
   void integrateFunction(const Transformation& T_G_C,
                          const Pointcloud& points_C, const Colors& colors, const Infos& points_info,
                          const bool freespace_points,
@@ -245,6 +258,10 @@ class MergedTsdfIntegrator : public TsdfIntegratorBase {
   void integratePointCloud(const Transformation& T_G_C,
                            const Pointcloud& points_C, const Colors& colors,
                            const Infos& points_info,
+                           const bool freespace_points = false);
+  
+  void integratePointCloud(const Transformation& T_G_C,
+                           const Pointcloud& points_C, const Colors& colors,
                            const bool freespace_points = false);
 
  protected:
@@ -304,6 +321,9 @@ class FastTsdfIntegrator : public TsdfIntegratorBase {
                            const Infos& points_info,
                            const bool freespace_points = false);
 
+  void integratePointCloud(const Transformation& T_G_C,
+                           const Pointcloud& points_C, const Colors& colors,
+                           const bool freespace_points = false);
  private:
   /**
    * Two approximate sets are used below. The limitations of these sets are

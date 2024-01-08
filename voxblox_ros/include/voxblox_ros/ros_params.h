@@ -68,6 +68,12 @@ inline TsdfIntegratorBase::Config getTsdfIntegratorConfigFromRosParam(
 
   double truncation_distance = integrator_config.default_truncation_distance;
   double max_weight = integrator_config.max_weight;
+  nh_private.param("voxel_weight_noise_picoflexx_factor",
+                   integrator_config.voxel_weight_noise_picoflexx_factor,
+                   integrator_config.voxel_weight_noise_picoflexx_factor);
+  nh_private.param("voxel_weight_noise_depth_camera_factor",
+                   integrator_config.voxel_weight_noise_depth_camera_factor,
+                   integrator_config.voxel_weight_noise_depth_camera_factor);
   nh_private.param("voxel_carving_enabled",
                    integrator_config.voxel_carving_enabled,
                    integrator_config.voxel_carving_enabled);

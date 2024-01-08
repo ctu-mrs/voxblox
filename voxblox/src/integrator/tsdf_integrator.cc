@@ -236,11 +236,11 @@ float TsdfIntegratorBase::getVoxelWeight(const Point& point_C, const Info& point
   if (dist > kEpsilon) {
     if(point_info.is_lidar){
       //picoflexx
-      return 1.0f / std::pow(dist, 1.0);
+      return 1.0f / std::pow(dist, config_.voxel_weight_noise_picoflexx_factor);
     }
     else{
       //depth camera
-      return 1.0f / std::pow(dist, 2.0);
+      return 1.0f / std::pow(dist, config_.voxel_weight_noise_depth_camera_factor);
     }
   }
   return 0.0f;
@@ -284,6 +284,14 @@ void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   timing::Timer insertion_timer("inserting_missed_blocks");
   updateLayerWithStoredBlocks();
   insertion_timer.Stop();
+}
+
+void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
+                                             const Pointcloud& points_C,
+                                             const Colors& colors,
+                                             const bool freespace_points) {
+  Infos points_info;
+  SimpleTsdfIntegrator::integratePointCloud(T_G_C,points_C,colors,points_info,freespace_points); 
 }
 
 void SimpleTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
@@ -359,6 +367,15 @@ void MergedTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
 
   integrate_timer.Stop();
 }
+
+void MergedTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
+                                             const Pointcloud& points_C,
+                                             const Colors& colors,
+                                             const bool freespace_points) {
+  Infos points_info;
+  MergedTsdfIntegrator::integratePointCloud(T_G_C,points_C,colors,points_info,freespace_points); 
+}
+
 
 void MergedTsdfIntegrator::bundleRays(
     const Transformation& T_G_C, const Pointcloud& points_C,
@@ -583,6 +600,7 @@ void FastTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
   }
 }
 
+
 void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
                                              const Pointcloud& points_C,
                                              const Colors& colors,
@@ -619,6 +637,14 @@ void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   timing::Timer insertion_timer("inserting_missed_blocks");
   updateLayerWithStoredBlocks();
   insertion_timer.Stop();
+}
+
+void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
+                                             const Pointcloud& points_C,
+                                             const Colors& colors,
+                                             const bool freespace_points) {
+  Infos points_info;
+  FastTsdfIntegrator::integratePointCloud(T_G_C,points_C,colors,points_info,freespace_points); 
 }
 
 std::string TsdfIntegratorBase::Config::print() const {
