@@ -25,7 +25,7 @@
 # vim
 *.swp
 *.swo
-
+*.swm
 
 # Executables
 *.exe
