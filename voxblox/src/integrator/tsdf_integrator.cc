@@ -264,6 +264,7 @@ void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
 void SimpleTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
                                              const PointcloudWeighted& points_C,
                                              const bool freespace_points,
+                                             const bool raycast_points,
                                              ThreadSafeIndex* index_getter) {
   DCHECK(index_getter != nullptr);
 
@@ -276,31 +277,49 @@ void SimpleTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
       continue;
     }
 
-    const Point origin = T_G_C.getPosition();
-    const Point point_G = T_G_C * point_C;
+    // for standard points from a sensor, raycast them
+    if (raycast_points)
+    {
+      const Point origin = T_G_C.getPosition();
+      const Point point_G = T_G_C * point_C;
 
-    RayCaster ray_caster(origin, point_G, is_clearing,
-                         config_.voxel_carving_enabled,
-                         config_.max_ray_length_m, voxel_size_inv_,
-                         config_.default_truncation_distance);
+      RayCaster ray_caster(origin, point_G, is_clearing,
+                           config_.voxel_carving_enabled,
+                           config_.max_ray_length_m, voxel_size_inv_,
+                           config_.default_truncation_distance);
 
-    Block<TsdfVoxel>::Ptr block = nullptr;
-    BlockIndex block_idx;
-    GlobalIndex global_voxel_idx;
-    while (ray_caster.nextRayIndex(&global_voxel_idx)) {
-      TsdfVoxel* voxel =
-          allocateStorageAndGetVoxelPtr(global_voxel_idx, &block, &block_idx);
+      Block<TsdfVoxel>::Ptr block = nullptr;
+      BlockIndex block_idx;
+      GlobalIndex global_voxel_idx;
+      while (ray_caster.nextRayIndex(&global_voxel_idx)) {
+        TsdfVoxel* voxel =
+            allocateStorageAndGetVoxelPtr(global_voxel_idx, &block, &block_idx);
 
-      const float weight = getVoxelWeight(point_Cw);
+        const float weight = getVoxelWeight(point_Cw);
 
-      updateTsdfVoxel(origin, point_G, global_voxel_idx, weight, voxel);
+        updateTsdfVoxel(origin, point_G, global_voxel_idx, weight, voxel);
+      }
+    }
+    // for points from an apriori map, just update the specific voxels corresponding to the pointcloud
+    else
+    {
+      const GlobalIndex global_voxel_idx = getGridIndexFromPoint(point_C, voxel_size_inv_);
+      Block<TsdfVoxel>::Ptr block = nullptr;
+      BlockIndex block_idx;
+      TsdfVoxel* voxel = allocateStorageAndGetVoxelPtr(global_voxel_idx, &block, &block_idx);
+      if (freespace_points)
+        voxel->distance = config_.default_truncation_distance;
+      else
+        voxel->distance = 0;
+      voxel->weight = point_Cw.w();
     }
   }
 }
 
 void MergedTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
                                                const PointcloudWeighted& points_C,
-                                               const bool freespace_points) {
+                                               const bool freespace_points,
+                                               [[maybe_unused]] const bool raycast_points) {
   timing::Timer integrate_timer("integrate/merged");
 
   // Pre-compute a list of unique voxels to end on.
@@ -543,7 +562,8 @@ void FastTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
 
 void FastTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
                                              const PointcloudWeighted& points_C,
-                                             const bool freespace_points) {
+                                             const bool freespace_points,
+                                             [[maybe_unused]] const bool raycast_points) {
   timing::Timer integrate_timer("integrate/fast");
 
   integration_start_time_ = std::chrono::steady_clock::now();

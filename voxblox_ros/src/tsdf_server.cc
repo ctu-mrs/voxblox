@@ -386,6 +386,13 @@ void TsdfServer::insertFreespacePointcloud(
   }
 }
 
+void TsdfServer::integrateAprioriPointcloud(const Transformation& T_G_C,
+                                     const PointcloudWeighted& ptcloud_C,
+                                     const bool is_freespace_pointcloud) {
+  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C,
+                                        is_freespace_pointcloud, false);
+}
+
 void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                      const PointcloudWeighted& ptcloud_C,
                                      const bool is_freespace_pointcloud) {

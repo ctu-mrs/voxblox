@@ -58,6 +58,9 @@ class TsdfServer {
       const sensor_msgs::PointCloud2::Ptr& pointcloud_msg,
       const Transformation& T_G_C, const bool is_freespace_pointcloud);
 
+  void integrateAprioriPointcloud(const Transformation& T_G_C,
+                                  const PointcloudWeighted& ptcloud_C,
+                                  const bool is_freespace_pointcloud = false);
   void integratePointcloud(const Transformation& T_G_C,
                            const PointcloudWeighted& ptcloud_C,
                            const bool is_freespace_pointcloud = false);
