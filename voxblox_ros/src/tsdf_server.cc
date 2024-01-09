@@ -59,6 +59,8 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
                                   &TsdfServer::pointcloudCallback, this);
   rangecloud_sub_ = nh_.subscribe("rangecloud", pointcloud_queue_size_,
                                   &TsdfServer::rangecloudCallback, this);
+  initcloud_sub_ = nh_.subscribe("initcloud", pointcloud_queue_size_,
+                                  &TsdfServer::initcloudCallback, this);
 
   mesh_pub_ = nh_private_.advertise<voxblox_msgs::Mesh>("mesh", 1, true);
 
@@ -92,10 +94,7 @@ TsdfServer::TsdfServer(const ros::NodeHandle& nh,
 
   std::string method("merged");
   nh_private_.param("method", method, method);
-  if (method.compare("simple") == 0) {
-    tsdf_integrator_.reset(new SimpleTsdfIntegrator(
-        integrator_config, tsdf_map_->getTsdfLayerPtr()));
-  } else if (method.compare("merged") == 0) {
+  if (method.compare("merged") == 0) {
     tsdf_integrator_.reset(new MergedTsdfIntegrator(
         integrator_config, tsdf_map_->getTsdfLayerPtr()));
   } else if (method.compare("fast") == 0) {
@@ -186,7 +185,7 @@ void TsdfServer::getServerConfigFromRosParam(
 
 void TsdfServer::processPointCloudMessageAndInsert(
     const sensor_msgs::PointCloud2::Ptr& pointcloud_msg,
-    const Transformation& T_G_C, const bool is_freespace_pointcloud) {
+    const Transformation& T_G_C, const bool is_freespace_pointcloud, const bool is_init_pointcloud) {
   // Convert the PCL pointcloud into our awesome format.
 
   // Horrible hack fix to fix color parsing colors in PCL.
@@ -273,7 +272,7 @@ void TsdfServer::processPointCloudMessageAndInsert(
   }
 
   ros::WallTime start = ros::WallTime::now();
-  integratePointcloud(T_G_C_refined, points_Cw, is_freespace_pointcloud);
+  integratePointcloud(T_G_C_refined, points_Cw, is_freespace_pointcloud, is_init_pointcloud);
   ros::WallTime end = ros::WallTime::now();
   if (verbose_) {
     ROS_INFO("Finished integrating in %f seconds, have %lu blocks.",
@@ -332,6 +331,12 @@ void TsdfServer::rangecloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcl
   insertPointcloud(pointcloud_msg_in);
 }
 
+void TsdfServer::initcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in)
+{
+  ROS_INFO_STREAM("Inserting a new map initialization cloud.");
+  insertInitializationPointcloud(pointcloud_msg_in);
+}
+
 void TsdfServer::insertPointcloud(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in)
 {
   if (pointcloud_msg_in->header.stamp - last_msg_time_ptcloud_ >
@@ -347,8 +352,9 @@ void TsdfServer::insertPointcloud(const sensor_msgs::PointCloud2::Ptr& pointclou
   while (
       getNextPointcloudFromQueue(&pointcloud_queue_, &pointcloud_msg, &T_G_C)) {
     constexpr bool is_freespace_pointcloud = false;
+    constexpr bool is_init_pointcloud = false;
     processPointCloudMessageAndInsert(pointcloud_msg, T_G_C,
-                                      is_freespace_pointcloud);
+                                      is_freespace_pointcloud, is_init_pointcloud);
     processed_any = true;
   }
 
@@ -381,23 +387,33 @@ void TsdfServer::insertFreespacePointcloud(
   while (getNextPointcloudFromQueue(&freespace_pointcloud_queue_,
                                     &pointcloud_msg, &T_G_C)) {
     constexpr bool is_freespace_pointcloud = true;
+    constexpr bool is_init_pointcloud = false;
     processPointCloudMessageAndInsert(pointcloud_msg, T_G_C,
-                                      is_freespace_pointcloud);
+                                      is_freespace_pointcloud, is_init_pointcloud);
   }
 }
 
-void TsdfServer::integrateAprioriPointcloud(const Transformation& T_G_C,
-                                     const PointcloudWeighted& ptcloud_C,
-                                     const bool is_freespace_pointcloud) {
-  tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C,
-                                        is_freespace_pointcloud, false);
+void TsdfServer::insertInitializationPointcloud(
+    const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in) {
+
+  initialization_pointcloud_queue_.push(pointcloud_msg_in);
+
+  Transformation T_G_C;
+  sensor_msgs::PointCloud2::Ptr pointcloud_msg;
+  while (getNextPointcloudFromQueue(&initialization_pointcloud_queue_,
+                                    &pointcloud_msg, &T_G_C)) {
+    constexpr bool is_freespace_pointcloud = false;
+    constexpr bool is_init_pointcloud = true;
+    processPointCloudMessageAndInsert(pointcloud_msg, T_G_C,
+                                      is_freespace_pointcloud, is_init_pointcloud);
+  }
 }
 
 void TsdfServer::integratePointcloud(const Transformation& T_G_C,
                                      const PointcloudWeighted& ptcloud_C,
-                                     const bool is_freespace_pointcloud) {
+                                     const bool is_freespace_pointcloud, const bool is_init_pointcloud) {
   tsdf_integrator_->integratePointCloud(T_G_C, ptcloud_C,
-                                        is_freespace_pointcloud);
+                                        is_freespace_pointcloud, !is_init_pointcloud);
 }
 
 void TsdfServer::publishAllUpdatedTsdfVoxels() {

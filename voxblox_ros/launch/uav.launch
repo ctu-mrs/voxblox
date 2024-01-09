@@ -13,6 +13,7 @@
 
       <remap from="pointcloud" to="vofod/background_clusters_pc"/>
       <remap from="rangecloud" to="vofod/rangefinder_pc"/>
+      <remap from="initcloud" to="vofod/apriori_pc"/>
       <remap from="freespace_pointcloud" to="vofod/freecloud_pc"/>
       <param name="pointcloud_queue_size" value="20"/>
       <param name="world_frame" value="$(arg uav_name)/rtk_origin"/>

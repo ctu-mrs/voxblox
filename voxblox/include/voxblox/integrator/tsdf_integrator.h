@@ -102,10 +102,6 @@ class TsdfIntegratorBase {
                                    const bool freespace_points = false,
                                    const bool raycast_points = true) = 0;
 
-  virtual void integrateAprioriPointCloud(const Transformation& T_G_C,
-                                  const PointcloudWeighted& points_C,
-                                  const bool freespace_points = false) = 0;
-
   /// Returns a CONST ref of the config.
   const Config& getConfig() const { return config_; }
 

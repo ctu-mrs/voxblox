@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TSDF cloud1
         - /freecloud pc1
       Splitter Ratio: 0.6441176533699036
     Tree Height: 1109
@@ -89,13 +88,13 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /uav91/voxblox_node/occupied_nodes
       Name: occupied nodes
       Namespaces:
-        occupied_voxels: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: voxblox_rviz_plugin/VoxbloxMesh
       Enabled: false
       Name: VoxbloxMesh
@@ -324,7 +323,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 61.10943603515625
+      Distance: 83.32225036621094
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -332,17 +331,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 21.719345092773438
-        Y: 15.555809020996094
-        Z: 1.6596039533615112
+        X: 7.912466049194336
+        Y: 12.077301025390625
+        Z: 0.5305964946746826
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.28039535880088806
+      Pitch: 0.5603954792022705
       Target Frame: <Fixed Frame>
-      Yaw: 2.548478841781616
+      Yaw: 3.4434595108032227
     Saved: ~
 Window Geometry:
   Camera:
@@ -362,5 +361,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 2560
-  X: 0
+  X: 1920
   Y: 40

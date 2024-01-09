@@ -238,7 +238,8 @@ float TsdfIntegratorBase::getVoxelWeight(const PointWeighted& point_Cw) const {
 
 void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
                                                const PointcloudWeighted& points_C,
-                                               const bool freespace_points) {
+                                               const bool freespace_points,
+                                               const bool raycast_points) {
   timing::Timer integrate_timer("integrate/simple");
 
   std::unique_ptr<ThreadSafeIndex> index_getter(
@@ -248,7 +249,7 @@ void SimpleTsdfIntegrator::integratePointCloud(const Transformation& T_G_C,
   for (size_t i = 0; i < config_.integrator_threads; ++i) {
     integration_threads.emplace_back(&SimpleTsdfIntegrator::integrateFunction,
                                      this, T_G_C, points_C,
-                                     freespace_points, index_getter.get());
+                                     freespace_points, raycast_points, index_getter.get());
   }
 
   for (std::thread& thread : integration_threads) {
@@ -303,7 +304,7 @@ void SimpleTsdfIntegrator::integrateFunction(const Transformation& T_G_C,
     // for points from an apriori map, just update the specific voxels corresponding to the pointcloud
     else
     {
-      const GlobalIndex global_voxel_idx = getGridIndexFromPoint(point_C, voxel_size_inv_);
+      const GlobalIndex global_voxel_idx = getGridIndexFromPoint<GlobalIndex>(point_C, voxel_size_inv_);
       Block<TsdfVoxel>::Ptr block = nullptr;
       BlockIndex block_idx;
       TsdfVoxel* voxel = allocateStorageAndGetVoxelPtr(global_voxel_idx, &block, &block_idx);

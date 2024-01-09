@@ -49,21 +49,23 @@ class TsdfServer {
 
   void pointcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in);
   void rangecloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in);
+  void initcloudCallback(const sensor_msgs::PointCloud2::Ptr& pointcloud_msg_in);
   void insertPointcloud(const sensor_msgs::PointCloud2::Ptr& pointcloud);
 
   void insertFreespacePointcloud(
       const sensor_msgs::PointCloud2::Ptr& pointcloud);
 
+  void insertInitializationPointcloud(
+      const sensor_msgs::PointCloud2::Ptr& pointcloud);
+
   virtual void processPointCloudMessageAndInsert(
       const sensor_msgs::PointCloud2::Ptr& pointcloud_msg,
-      const Transformation& T_G_C, const bool is_freespace_pointcloud);
+      const Transformation& T_G_C, const bool is_freespace_pointcloud, const bool is_init_cloud);
 
-  void integrateAprioriPointcloud(const Transformation& T_G_C,
-                                  const PointcloudWeighted& ptcloud_C,
-                                  const bool is_freespace_pointcloud = false);
   void integratePointcloud(const Transformation& T_G_C,
                            const PointcloudWeighted& ptcloud_C,
-                           const bool is_freespace_pointcloud = false);
+                           const bool is_freespace_pointcloud = false, const bool is_init_cloud = false);
+
   virtual void newPoseCallback(const Transformation& /*new_pose*/) {
     // Do nothing.
   }
@@ -139,6 +141,7 @@ class TsdfServer {
   /// Data subscribers.
   ros::Subscriber pointcloud_sub_;
   ros::Subscriber rangecloud_sub_;
+  ros::Subscriber initcloud_sub_;
   ros::Subscriber freespace_pointcloud_sub_;
 
   /// Publish markers for visualization.
@@ -258,6 +261,7 @@ class TsdfServer {
    */
   std::queue<sensor_msgs::PointCloud2::Ptr> pointcloud_queue_;
   std::queue<sensor_msgs::PointCloud2::Ptr> freespace_pointcloud_queue_;
+  std::queue<sensor_msgs::PointCloud2::Ptr> initialization_pointcloud_queue_;
 
   // Last message times for throttling input.
   ros::Time last_msg_time_ptcloud_;
