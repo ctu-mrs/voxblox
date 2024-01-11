@@ -72,7 +72,7 @@ class TsdfServer {
   /// Incremental update.
   virtual void updateMesh();
   /// Batch update.
-  virtual bool generateMesh(const bool only_mesh_updated_blocks = true);
+  virtual bool generateMesh(bool only_mesh_updated_blocks = true);
   // Publishes all available pointclouds.
   virtual void publishPointclouds();
   // Publishes the complete map
