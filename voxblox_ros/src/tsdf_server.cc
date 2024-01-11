@@ -519,11 +519,11 @@ void TsdfServer::updateMesh() {
   }
 }
 
-bool TsdfServer::generateMesh() {
+bool TsdfServer::generateMesh(bool only_mesh_updated_blocks) {
   timing::Timer generate_mesh_timer("mesh/generate");
   const bool clear_mesh = true;
   if (clear_mesh) {
-    constexpr bool only_mesh_updated_blocks = false;
+    //constexpr bool only_mesh_updated_blocks = false;
     constexpr bool clear_updated_flag = true;
     mesh_integrator_->generateMesh(only_mesh_updated_blocks,
                                    clear_updated_flag);
@@ -587,7 +587,7 @@ bool TsdfServer::clearMapCallback(std_srvs::Empty::Request& /*request*/,
 bool TsdfServer::generateMeshCallback(std_srvs::Empty::Request& /*request*/,
                                       std_srvs::Empty::Response&
                                       /*response*/) {  // NOLINT
-  return generateMesh();
+  return generateMesh(false);
 }
 
 bool TsdfServer::saveMapCallback(voxblox_msgs::FilePath::Request& request,
