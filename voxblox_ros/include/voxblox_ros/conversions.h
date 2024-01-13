@@ -136,7 +136,7 @@ Info convertInfo(const PCLPoint& point);
 template <>
 inline Info convertInfo(const pcl::PointXYZRGB& point) {
   bool is_lidar;
-  if(point.r == 0 && point.g == 0 && point.b == 0){
+  if(point.r == 127 && point.g == 127 && point.b == 127){
     is_lidar = true;
   }else{
     is_lidar = false;
@@ -147,7 +147,7 @@ inline Info convertInfo(const pcl::PointXYZRGB& point) {
 template <>
 inline Info convertInfo(const pcl::PointXYZRGBNormal& point) {
   bool is_lidar;
-  if(point.r == 0 && point.g == 0 && point.b == 0){
+  if(point.r == 127 && point.g == 127 && point.b == 127){
     is_lidar = true;
   }else{
     is_lidar = false;
