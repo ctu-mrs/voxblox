@@ -138,7 +138,7 @@ struct Color {
       new_color.r = first_color.r;
       new_color.g = first_color.g;
       new_color.b = first_color.b;
-      new_color.a = first_color.a;
+      new_color.a = 254;//first_color.a;
     }
     return new_color;
   }
