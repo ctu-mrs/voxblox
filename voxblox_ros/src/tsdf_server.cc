@@ -337,11 +337,11 @@ bool TsdfServer::getNextPointcloudFromQueue(
     queue->pop();
     return true;
   } else {
-      ROS_ERROR_THROTTLE(2, "unable to look up transform timestamps");
     if (queue->size() >= kMaxQueueSize) {
-      ROS_ERROR_THROTTLE(2,
+      ROS_ERROR_THROTTLE(60,
                          "Input pointcloud queue getting too long! Dropping "
-                         "some pointclouds. The processing is taking too long.");
+                         "some pointclouds. Either unable to look up transform "
+                         "timestamps or the processing is taking too long.");
       while (queue->size() >= kMaxQueueSize) {
         queue->pop();
       }
